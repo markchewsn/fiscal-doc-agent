@@ -215,8 +215,10 @@ name = "fiscal-doc-agent"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "botocore" },
     { name = "langchain" },
     { name = "langchain-aws" },
+    { name = "langchain-core" },
     { name = "pydantic" },
     { name = "pymupdf4llm" },
     { name = "python-dotenv" },
@@ -229,8 +231,10 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "botocore", specifier = ">=1.43.123" },
     { name = "langchain", specifier = ">=1.4.8" },
     { name = "langchain-aws", specifier = ">=1.9.1" },
+    { name = "langchain-core", specifier = ">=1.7.4" },
     { name = "pydantic", specifier = ">=2.14.2" },
     { name = "pymupdf4llm", specifier = ">=2.1" },
     { name = "python-dotenv", specifier = ">=1.2.4" },

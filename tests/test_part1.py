@@ -1,4 +1,5 @@
 import json
+import re
 
 from langchain_core.runnables import RunnableLambda
 
@@ -93,8 +94,11 @@ def test_committed_part1_output():
     assert 20 in pages["total_top_ups_fy2024"]
     assert 8 in pages["latest_actual_fiscal_position"]
 
-    for field in f.values():
-        assert field["evidence"]
+    # Quotes must appear on the cited page, ignoring whitespace and Markdown table/bold markup.
+    norm = lambda s: re.sub(r"[\s*|_]+", " ", s).strip()
+    page_text = {p["page"]: norm(p["markdown"]) for p in load_pages()}
+    for name, field in f.items():
+        assert field["evidence"], name
         for ev in field["evidence"]:
-            assert 1 <= ev["page"] <= 37 and ev["quote"].strip()
+            assert ev["quote"].strip() and norm(ev["quote"]) in page_text[ev["page"]], (name, ev)
     assert out["usage"] and out["cost_usd"] > 0

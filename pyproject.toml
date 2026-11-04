@@ -7,8 +7,10 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
+    "botocore>=1.43.123",
     "langchain>=1.4.8",
     "langchain-aws>=1.9.1",
+    "langchain-core>=1.7.4",
     "pydantic>=2.14.2",
     "pymupdf4llm>=2.1",
     "python-dotenv>=1.2.4",
