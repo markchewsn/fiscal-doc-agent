@@ -1,0 +1,27 @@
+[project]
+name = "fiscal-doc-agent"
+version = "0.1.0"
+description = "LLM extraction and agents over MOF FY2024 Analysis of Revenue and Expenditure"
+authors = [
+    { name = "markchewsn", email = "mark.chew@simplifynext.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "langchain>=1.4.8",
+    "langchain-aws>=1.9.1",
+    "pydantic>=2.14.2",
+    "pymupdf4llm>=2.1",
+    "python-dotenv>=1.2.4",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.6,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

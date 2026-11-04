@@ -1,0 +1,93 @@
+{
+  "model": "global.anthropic.claude-sonnet-5-5",
+  "fields": {
+    "corporate_income_tax_fy2024": {
+      "value": 28.03,
+      "unit": "$billion",
+      "evidence": [
+        {
+          "page": 16,
+          "quote": "|Corporate Income Tax|28.38|28.03|(0.35)|(1.2)|"
+        }
+      ],
+      "billion": 28.03
+    },
+    "corporate_income_tax_yoy_pct": {
+      "value": -1.2,
+      "evidence": [
+        {
+          "page": 16,
+          "quote": "|Corporate Income Tax|28.38|28.03|(0.35)|(1.2)|"
+        }
+      ]
+    },
+    "total_top_ups_fy2024": {
+      "value": 20352.0,
+      "unit": "$million",
+      "evidence": [
+        {
+          "page": 20,
+          "quote": "|**Total**|**20,352**|"
+        }
+      ],
+      "billion": 20.352
+    },
+    "operating_revenue_taxes": {
+      "value": [
+        "Corporate Income Tax",
+        "Other Taxes",
+        "Personal Income Tax",
+        "Assets Taxes",
+        "Betting Taxes",
+        "Goods and Services Tax",
+        "Foreign Worker Levy",
+        "Water Conservation Tax",
+        "Land Betterment Charge",
+        "Annual Tonnage Tax",
+        "Casino Taxes"
+      ],
+      "evidence": [
+        {
+          "page": 5,
+          "quote": "This increase is mainly due to higher collections from Corporate Income Tax, Other Taxes, Vehicle Quota Premiums, Personal Income Tax, Assets Taxes, and Betting Taxes, partially offset by lower collections from the Goods and Services Tax."
+        },
+        {
+          "page": 5,
+          "quote": "Collections from Other Taxes, which include the Foreign Worker Levy, Water Conservation Tax, Land Betterment Charge, and Annual Tonnage Tax, are revised to $8.8 billion"
+        },
+        {
+          "page": 6,
+          "quote": "due to stronger-than-expected collections for Casino Taxes."
+        }
+      ]
+    },
+    "latest_actual_fiscal_position": {
+      "value": 1.72,
+      "unit": "$billion",
+      "evidence": [
+        {
+          "page": 8,
+          "quote": "|**OVERALL FISCAL POSITION**|**1.72**|**(0.35)**|**(3.57)**|||"
+        }
+      ],
+      "billion": 1.72
+    }
+  },
+  "usage": {
+    "global.anthropic.claude-sonnet-5-5": {
+      "input_tokens": 33495,
+      "output_tokens": 1809,
+      "total_tokens": 35304,
+      "input_token_details": {
+        "cache_creation": 0,
+        "cache_read": 0
+      }
+    }
+  },
+  "cost_usd": 0.08508,
+  "prices": {
+    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+    "as_of": "2026-10-06"
+  },
+  "latency_s": 16.53
+}
