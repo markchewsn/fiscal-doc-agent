@@ -1,6 +1,6 @@
 """Part 3: answer the demo queries with a multi-agent graph (Revenue + Expenditure Agents).
 
-Usage: python scripts/part3_agents.py [--graph supervisor] [--yes]
+Usage: python scripts/part3_agents.py [--graph supervisor|swarm] [--yes]
 Writes outputs/part3_<graph>.json + .md (per-query trace and usage summary).
 Model is chosen by LLM_MODEL (default Bedrock Sonnet 5.5); see .env.example.
 """
@@ -21,9 +21,16 @@ QUERIES = [
     "What is the total of FY2024 fund Top-ups and which is largest?",  # expenditure only
     "Does the FY2024 GST revenue increase cover the GST Voucher Fund Top-up?",  # cross-agent
 ]
-# Expected agent runs per query (supervisor: one route per agent + FINISH route + synthesis).
-AGENT_RUNS = [2, 1, 1, 2]
-AGENT_TURNS = 4  # ~search, read, read, answer
+AGENT_RUNS = [2, 1, 1, 2]  # expected agent runs per query
+AGENT_TURNS = 4  # ~search, read, read, answer (or handoff)
+# Central LLM calls per query: supervisor routes once per agent run, then FINISH + synthesis;
+# swarm makes one entry call.
+PLANS = {
+    "supervisor": (lambda runs: runs * (AGENT_TURNS + 1) + 2,
+                   "one supervisor route per agent run, a FINISH route and a synthesis call"),
+    "swarm": (lambda runs: runs * AGENT_TURNS + 1,
+              "one entry call picking the first agent; agents hand off directly"),
+}
 
 
 def totals(usage: dict) -> tuple[int, int]:
@@ -43,6 +50,14 @@ def summary_row(run: dict) -> str:
 def render_event(e: dict) -> list[str]:
     if e["type"] == "route":
         return [f"- **supervisor -> {e['next']}**: {e['reason']}"]
+    if e["type"] == "entry":
+        return [f"- **entry -> {e['next']}**: {e['reason']}"]
+    if e["type"] == "handoff":
+        return [f"- **{e['agent']} -> {e['next']}** (direct handoff): {e['reason']}",
+                f"  - `{e['agent']}` hands over its findings:", "",
+                *(f"    > {line}" for line in e["findings"].splitlines()), ""]
+    if e["type"] == "final_answer" and "agent" in e:
+        return [f"  - `{e['agent']}` writes the final answer (below)"]
     if e["type"] == "tool_call":
         args = ", ".join(f"{k}={v!r}" for k, v in e["args"].items())
         result = " ".join(e["result"].split())
@@ -50,7 +65,7 @@ def render_event(e: dict) -> list[str]:
     if e["type"] == "agent_answer":
         return [f"  - `{e['agent']}` answers:", "",
                 *(f"    > {line}" for line in e["text"].splitlines()), ""]
-    return []  # final_answer is rendered on its own
+    return []  # the supervisor's final_answer is rendered on its own
 
 
 def to_markdown(out: dict) -> str:
@@ -80,11 +95,12 @@ def main(kind="supervisor"):
 
     model = get_model()
     model_id = getattr(model, "model_id", None) or getattr(model, "model", str(model))
-    calls = sum(runs * (AGENT_TURNS + 1) + 2 for runs in AGENT_RUNS)
+    per_query, central = PLANS[args.graph]
+    calls = sum(map(per_query, AGENT_RUNS))
     print(f"Plan: {len(QUERIES)} queries through the {args.graph} graph on {model_id}, "
-          f"~{calls} LLM calls total (per query: one supervisor route per agent run, "
-          f"~{AGENT_TURNS} turns per agent run, a FINISH route and a synthesis call; expected "
-          f"agent runs per query {AGENT_RUNS}). Hard cap {RECURSION_LIMIT} graph steps per query.")
+          f"~{calls} LLM calls total (per query: ~{AGENT_TURNS} turns per agent run, {central}; "
+          f"expected agent runs per query {AGENT_RUNS}). Hard cap {RECURSION_LIMIT} graph steps "
+          "per query.")
     if not args.yes and input("Proceed? [y/N] ").strip().lower() != "y":
         return None
 

@@ -8,7 +8,7 @@ from operator import add
 from typing import Annotated, Literal, TypedDict
 
 from langchain.agents import create_agent
-from langchain.tools import tool
+from langchain.tools import InjectedState, tool
 from langchain_core.callbacks import UsageMetadataCallbackHandler
 from langchain_core.messages import AIMessage, ToolMessage
 from langgraph.graph import END, START, StateGraph
@@ -184,7 +184,80 @@ def supervisor_graph(model):
     return graph.compile()
 
 
-GRAPHS = {"supervisor": supervisor_graph}
+# Swarm graph: no central router. A one-call entry picks the first agent; agents hand off
+# directly to a peer, and whichever agent answers without handing off writes the final answer.
+ENTRY_PROMPT = f"""Pick the specialist agent that should start answering a question about {DOC}.
+Agents:
+""" + "\n".join(f"- {n}: {a['description']}" for n, a in AGENTS.items())
+
+SWARM_TASK = """Research only the parts of the question within your specialism. Do not research
+or answer a part outside it yourself: if any such part is not covered by the findings above, you
+must call {handoff} with your findings (figures, units, financial years, page citations) and
+what {peer} must find. Only when the findings above and yours cover every part, write the final
+answer: one comprehensive answer to the whole question, combining them."""
+
+
+class Entry(BaseModel):
+    """The swarm entry's choice of first agent."""
+
+    agent: AgentName
+    reason: str = Field(description="Why this agent should start.")
+
+
+def handoff_tool(name: str, peer: str):
+    """`transfer_to_<peer>`: ends `name`'s run and sends the question straight to `peer`."""
+
+    @tool(f"transfer_to_{peer}")
+    def transfer(findings: str, task: str, state: Annotated[dict, InjectedState]) -> Command:
+        """Hand the question to a peer agent once your part is answered. findings: your answer
+        so far with figures and page citations; task: what the peer must still find."""
+        own = [e for e in agent_events(name, state["messages"])
+               if e["type"] == "tool_call" and e["tool"] != f"transfer_to_{peer}"]
+        return Command(goto=peer, graph=Command.PARENT, update={
+            "task": task, "reports": [{"agent": name, "text": findings}],
+            "trace": [*own, {"type": "handoff", "agent": name, "next": peer, "reason": task,
+                               "findings": findings}]})
+
+    transfer.description += f" The peer is {peer}: {AGENTS[peer]['description']}."
+    return transfer
+
+
+def swarm_graph(model):
+    picker = model.with_structured_output(Entry, method="json_schema")
+
+    def entry(state: State) -> Command[AgentName]:
+        pick = picker.invoke([("system", ENTRY_PROMPT), ("human", state["query"])])
+        return Command(goto=pick.agent, update={"trace": [
+            {"type": "entry", "next": pick.agent, "reason": pick.reason}]})
+
+    def agent_node(name: str):
+        peer = next(n for n in AGENTS if n != name)
+        handoff = handoff_tool(name, peer)
+        agent = build_agent(name, model, [handoff])
+        task = SWARM_TASK.format(handoff=handoff.name, peer=peer)
+
+        # A handoff raises out of agent.invoke as a parent Command; reaching the return
+        # means this agent answered without handing off, so it is the last one.
+        def run(state: State) -> Command[AgentName | Literal["__end__"]]:
+            brief = briefing(state["query"], state["reports"], "\n\n".join(
+                filter(None, [state["task"], task])))
+            messages = agent.invoke({"messages": [("human", brief)]})["messages"]
+            events = agent_events(name, messages)
+            answer = events.pop()["text"]
+            return Command(goto=END, update={"answer": answer, "trace": [
+                *events, {"type": "final_answer", "agent": name, "text": answer}]})
+
+        return run
+
+    graph = StateGraph(State)
+    graph.add_node("entry", entry)
+    for name in AGENTS:
+        graph.add_node(name, agent_node(name))
+    graph.add_edge(START, "entry")
+    return graph.compile()
+
+
+GRAPHS = {"supervisor": supervisor_graph, "swarm": swarm_graph}
 RECURSION_LIMIT = 25  # graph steps per run; caps runaway routing loops
 
 
