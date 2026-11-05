@@ -2,14 +2,12 @@ import asyncio
 import json
 
 import pytest
-from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage
-from langchain_core.outputs import ChatGeneration, ChatResult
-from langchain_core.runnables import RunnableLambda
 
 from fiscal_doc_agent.dates import normalize_dates
 from fiscal_doc_agent.parsing import ROOT
 from fiscal_doc_agent.part2 import classify_dates, mcp_tools, run_part2, skill_tool
+from fakes import FakeChat
 
 
 @pytest.mark.parametrize(
@@ -35,28 +33,6 @@ def test_normalize_dates_handles_many_texts_and_texts_without_a_full_date():
     assert normalize_dates(texts) == [
         ["2024-02-16"], [], [], [], [], ["2023-04-01", "2024-03-31"],
     ]
-
-
-class FakeChat(BaseChatModel):
-    """Scripted chat model: canned agent turns, canned structured outputs, records bound tools."""
-
-    turns: list[AIMessage]
-    structured: list[dict]
-    tools_per_turn: list[list[str]] = []
-
-    @property
-    def _llm_type(self) -> str:
-        return "fake-chat"
-
-    def bind_tools(self, tools, **_):
-        self.tools_per_turn.append([t.name if hasattr(t, "name") else t["name"] for t in tools])
-        return self
-
-    def _generate(self, messages, stop=None, run_manager=None, **_):
-        return ChatResult(generations=[ChatGeneration(message=self.turns.pop(0))])
-
-    def with_structured_output(self, schema, **_):
-        return RunnableLambda(lambda _: schema.model_validate(self.structured.pop(0)))
 
 
 DIST = "Distributed on Budget Day: 16 February 2024"

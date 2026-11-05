@@ -27,8 +27,8 @@ def test_cost_from_usage_splits_cached_input():
             "input_token_details": {"cache_read": 400_000, "cache_creation": 100_000},
         }
     }
-    # 1M uncached * $2 + 0.1M out * $10 + 0.4M read * $0.20 + 0.1M write * $2.50
-    assert round(cost_usd(usage), 6) == 2.0 + 1.0 + 0.08 + 0.25
+    # 1M uncached * $2 + 0.1M out * $10 + 0.4M read * $0.10 + 0.1M write * $2.50
+    assert round(cost_usd(usage), 6) == 2.0 + 1.0 + 0.04 + 0.25
     assert cost_usd({"gpt-x": {"input_tokens": 1, "output_tokens": 1}}) is None
 
 
@@ -115,5 +115,5 @@ def test_cost_counts_bedrock_cache_writes_reported_by_ttl():
                                     "ephemeral_1h_input_tokens": 100_000},
         }
     }
-    # 1M uncached * $2 + 0.4M read * $0.20 + 0.1M 5m write * $2.50 + 0.1M 1h write * $4 (2x input)
-    assert round(cost_usd(usage), 6) == 2.0 + 0.08 + 0.25 + 0.4
+    # 1M uncached * $2 + 0.4M read * $0.10 + 0.1M 5m write * $2.50 + 0.1M 1h write * $4 (2x input)
+    assert round(cost_usd(usage), 6) == 2.0 + 0.04 + 0.25 + 0.4

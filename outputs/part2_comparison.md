@@ -5,8 +5,8 @@ Model: `global.anthropic.claude-sonnet-5-5`. Same deepagents harness, prompt and
 | Stage | MCP input | Skill input | MCP output | Skill output | MCP USD | Skill USD |
 |---|---|---|---|---|---|---|
 | extract | 32,314 | 32,314 | 134 | 134 | 0.0660 | 0.0660 |
-| agent | 3,881 | 8,609 | 347 | 423 | 0.0088 | 0.0188 |
-| robustness_demo | 4,180 | 9,014 | 849 | 868 | 0.0105 | 0.0132 |
+| agent | 3,881 | 8,609 | 347 | 423 | 0.0086 | 0.0185 |
+| robustness_demo | 4,180 | 9,014 | 849 | 868 | 0.0101 | 0.0124 |
 
 `extract` is identical in both arms (no tools); `agent` and `robustness_demo` are where tool delivery matters.
 
@@ -27,4 +27,4 @@ Skills should win when an agent has many tools, or tools it seldom needs: the MC
 
 Caveat: one run per arm. USD includes prompt-cache reads and writes, whose split depends on cache state, so the token columns are the cleaner comparison.
 
-Prices 2026-10-06, https://platform.claude.com/docs/en/about-claude/pricing
+Prices 2026-11-05, https://platform.claude.com/docs/en/about-claude/pricing

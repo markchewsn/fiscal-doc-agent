@@ -20,11 +20,12 @@ class Price(NamedTuple):
 
 
 # Anthropic list prices; Bedrock global cross-region profiles bill at list price (check
-# https://aws.amazon.com/bedrock/pricing/). Cache rates are 0.1x read, 1.25x write of input.
+# https://aws.amazon.com/bedrock/pricing/). Cache writes are 1.25x input; cache reads are 0.05x
+# input on Sonnet 5.5 and 0.1x on Haiku 5.5.
 PRICES_SOURCE = "https://platform.claude.com/docs/en/about-claude/pricing"
-PRICES_AS_OF = "2026-10-06"
+PRICES_AS_OF = "2026-11-05"
 PRICES = {
-    "claude-sonnet-5-5": Price(input=2.00, output=10.00, cache_read=0.20, cache_write=2.50),
+    "claude-sonnet-5-5": Price(input=2.00, output=10.00, cache_read=0.10, cache_write=2.50),
     "claude-haiku-5-5": Price(input=0.10, output=0.50, cache_read=0.01, cache_write=0.125),  # prompts <=100K tokens
 }
 
