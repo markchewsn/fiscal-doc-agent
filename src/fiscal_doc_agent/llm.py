@@ -16,7 +16,7 @@ class Price(NamedTuple):
     input: float
     output: float
     cache_read: float
-    cache_write: float  # 5-minute TTL
+    cache_write: float  # 5-minute TTL; 1-hour TTL is 2x input
 
 
 # Anthropic list prices; Bedrock global cross-region profiles bill at list price (check
@@ -50,12 +50,17 @@ def cost_usd(usage_by_model: dict) -> float | None:
         if price is None:
             return None
         details = u.get("input_token_details") or {}
-        read, write = details.get("cache_read", 0), details.get("cache_creation", 0)
-        uncached = u["input_tokens"] - read - write  # LangChain input_tokens includes cache
+        read = details.get("cache_read", 0)
+        # Cache writes: LangChain moves them from cache_creation into per-TTL keys when the
+        # provider reports a TTL breakdown (langchain-aws does for Bedrock), so sum all three.
+        write = details.get("cache_creation", 0) + details.get("ephemeral_5m_input_tokens", 0)
+        write_1h = details.get("ephemeral_1h_input_tokens", 0)
+        uncached = u["input_tokens"] - read - write - write_1h  # input_tokens includes cache
         total += (
             uncached * price.input
             + u["output_tokens"] * price.output
             + read * price.cache_read
             + write * price.cache_write
+            + write_1h * price.input * 2  # 1-hour TTL writes bill at 2x input
         ) / 1_000_000
     return total
