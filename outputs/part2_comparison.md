@@ -23,7 +23,7 @@ Progressive disclosure defers a tool's schema until the skill is read. That pays
 - **Added turn:** the agent must call `read_file` on SKILL.md before it can normalise, so a run takes one more model call. Each call re-sends the whole context, and the SKILL.md body stays in history for later turns. The extra `read_file` call is also why output tokens are higher.
 - **Cache:** on Bedrock, deepagents can't add a tool mid-conversation, so the tool list changes after the read and the cached prompt prefix is rebuilt (more cache writes). Native Anthropic and OpenAI models add it without breaking the cache.
 
-Skills should win when an agent has many tools, or tools it seldom needs: the MCP arm pays for every schema on every turn, while the skills section grows by one line per skill.
+Skills would be better when an agent has many tools, or tools it seldom needs: the MCP arm pays for every schema on every turn, while the skills section grows by one line per skill.
 
 Caveat: one run per arm. USD includes prompt-cache reads and writes, whose split depends on cache state, so the token columns are the cleaner comparison.
 

@@ -10,6 +10,7 @@ import json
 
 from part3_agents import main, totals
 
+from fiscal_doc_agent.llm import usd
 from fiscal_doc_agent.parsing import ROOT
 
 OUTPUTS = ROOT / "outputs"
@@ -27,14 +28,15 @@ def row(label: str, run: dict) -> str:
         return f"| {label} | failed: {run['error']} | | | | | |"
     tin, tout = totals(run["usage"])
     return (f"| {label} | {path(run)} | {run['llm_calls']} | {tin:,} | {tout:,} | "
-            f"{run['cost_usd']:.4f} | {run['latency_s']} |")
+            f"{usd(run['cost_usd'])} | {run['latency_s']} |")
 
 
 def total_row(graph: str, runs: list[dict]) -> str:
     ok = [r for r in runs if "error" not in r]
     tin, tout = map(sum, zip(*(totals(r["usage"]) for r in ok)))
+    costs = [r["cost_usd"] for r in ok]
     return (f"| **Total {graph}** | | {sum(r['llm_calls'] for r in ok)} | {tin:,} | {tout:,} | "
-            f"{sum(r['cost_usd'] for r in ok):.4f} | "
+            f"{usd(None if None in costs else sum(costs))} | "
             f"{round(sum(r['latency_s'] for r in ok), 2)} |")
 
 

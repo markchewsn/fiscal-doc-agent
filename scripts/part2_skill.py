@@ -12,6 +12,7 @@ import json
 
 from part2_mcp import main
 
+from fiscal_doc_agent.llm import usd
 from fiscal_doc_agent.parsing import ROOT
 
 OUTPUTS = ROOT / "outputs"
@@ -41,7 +42,7 @@ def comparison(mcp: dict, skill: dict) -> str:
         lines.append(
             f"| {stage} | {tokens(m, 'input_tokens'):,} | {tokens(s, 'input_tokens'):,} | "
             f"{tokens(m, 'output_tokens'):,} | {tokens(s, 'output_tokens'):,} | "
-            f"{mcp['cost_usd'][stage]:.4f} | {skill['cost_usd'][stage]:.4f} |")
+            f"{usd(mcp['cost_usd'][stage])} | {usd(skill['cost_usd'][stage])} |")
     agree = statuses(mcp) == statuses(skill)
     lines += [
         "", "`extract` is identical in both arms (no tools); `agent` and `robustness_demo` "
@@ -66,7 +67,7 @@ def comparison(mcp: dict, skill: dict) -> str:
         "- **Cache:** on Bedrock, deepagents can't add a tool mid-conversation, so the tool "
         "list changes after the read and the cached prompt prefix is rebuilt (more cache "
         "writes). Native Anthropic and OpenAI models add it without breaking the cache.", "",
-        "Skills should win when an agent has many tools, or tools it seldom needs: the MCP arm "
+        "Skills would be better when an agent has many tools, or tools it seldom needs: the MCP arm "
         "pays for every schema on every turn, while the skills section grows by one line per "
         "skill.", "",
         "Caveat: one run per arm. USD includes prompt-cache reads and writes, whose split "
