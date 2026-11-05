@@ -12,7 +12,7 @@ from pathlib import Path
 from langchain_core.callbacks import get_usage_metadata_callback
 
 from fiscal_doc_agent.extraction import Part1Fields, extract, render
-from fiscal_doc_agent.llm import PRICES_AS_OF, PRICES_SOURCE, cost_usd, get_model
+from fiscal_doc_agent.llm import PRICES_AS_OF, PRICES_SOURCE, cost_usd, get_model, usd
 from fiscal_doc_agent.parsing import ROOT, load_pages
 
 
@@ -22,7 +22,7 @@ def to_markdown(result: dict) -> str:
         "# Part 1 extraction",
         "",
         f"Model: `{result['model']}`  ",
-        f"Cost: ${result['cost_usd']:.4f} (prices {result['prices']['as_of']}, "
+        f"Cost (USD): {usd(result['cost_usd'])} (prices {result['prices']['as_of']}, "
         f"{result['prices']['source']})  ",
         f"Latency: {result['latency_s']}s",
         "",
@@ -81,7 +81,7 @@ def main():
     args.out.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n")
     args.out.with_suffix(".md").write_text(to_markdown(result))
     print(json.dumps({k: v.get("billion", v["value"]) for k, v in result["fields"].items()}, indent=2))
-    print(f"Usage: {cb.usage_metadata}\nCost: ${result['cost_usd']}  Latency: {latency:.1f}s\nWrote {args.out} and .md")
+    print(f"Usage: {cb.usage_metadata}\nCost (USD): {usd(result['cost_usd'])}  Latency: {latency:.1f}s\nWrote {args.out} and .md")
 
 
 if __name__ == "__main__":

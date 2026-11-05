@@ -65,3 +65,8 @@ def cost_usd(usage_by_model: dict) -> float | None:
             + write_1h * price.input * 2  # 1-hour TTL writes bill at 2x input
         ) / 1_000_000
     return total
+
+
+def usd(cost: float | None) -> str:
+    """Cost for Markdown tables; "n/a" when the model has no entry in PRICES."""
+    return "n/a" if cost is None else f"{cost:.4f}"

@@ -1,7 +1,7 @@
 # Part 1 extraction
 
 Model: `global.anthropic.claude-sonnet-5-5`  
-Cost: $0.0851 (prices 2026-11-05, https://platform.claude.com/docs/en/about-claude/pricing)  
+Cost (USD): 0.0851 (prices 2026-11-05, https://platform.claude.com/docs/en/about-claude/pricing)  
 Latency: 16.53s
 
 | Field | Value | As printed | Evidence pages |

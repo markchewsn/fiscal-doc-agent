@@ -9,7 +9,7 @@ import argparse
 import json
 from pathlib import Path
 
-from fiscal_doc_agent.llm import PRICES_AS_OF, PRICES_SOURCE, cost_usd, get_model
+from fiscal_doc_agent.llm import PRICES_AS_OF, PRICES_SOURCE, cost_usd, get_model, usd
 from fiscal_doc_agent.parsing import ROOT
 from fiscal_doc_agent.part3 import GRAPHS, RECURSION_LIMIT, run_graph
 
@@ -42,8 +42,7 @@ def summary_row(run: dict) -> str:
     if "error" in run:
         return f"| {run['query']} | failed: {run['error']} | | | | |"
     tin, tout = totals(run["usage"])
-    cost = "n/a" if run["cost_usd"] is None else f"{run['cost_usd']:.4f}"
-    return (f"| {run['query']} | {run['llm_calls']} | {tin:,} | {tout:,} | {cost} | "
+    return (f"| {run['query']} | {run['llm_calls']} | {tin:,} | {tout:,} | {usd(run['cost_usd'])} | "
             f"{run['latency_s']} |")
 
 

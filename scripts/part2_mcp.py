@@ -11,7 +11,7 @@ import json
 import time
 from pathlib import Path
 
-from fiscal_doc_agent.llm import PRICES_AS_OF, PRICES_SOURCE, cost_usd, get_model
+from fiscal_doc_agent.llm import PRICES_AS_OF, PRICES_SOURCE, cost_usd, get_model, usd
 from fiscal_doc_agent.parsing import ROOT
 from fiscal_doc_agent.part2 import REFERENCE_DATE, classify_dates, run_part2
 
@@ -48,7 +48,7 @@ def to_markdown(result: dict) -> str:
     for stage, by_model in result["usage"].items():
         tin = sum(u["input_tokens"] for u in by_model.values())
         tout = sum(u["output_tokens"] for u in by_model.values())
-        lines.append(f"| {stage} | {tin:,} | {tout:,} | {result['cost_usd'][stage]:.4f} |")
+        lines.append(f"| {stage} | {tin:,} | {tout:,} | {usd(result['cost_usd'][stage])} |")
     lines += ["", f"Prices {result['prices']['as_of']}, {result['prices']['source']}", "",
               "## Robustness demo (periods, separate from the required output)", "",
               *table(result["robustness_demo"])]
