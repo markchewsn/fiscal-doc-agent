@@ -19,10 +19,10 @@ Latency: 7.92s
 | Stage | Input | Output | Cost (USD) |
 |---|---|---|---|
 | extract | 32,314 | 134 | 0.0660 |
-| agent | 3,881 | 347 | 0.0088 |
-| robustness_demo | 4,180 | 849 | 0.0105 |
+| agent | 3,881 | 347 | 0.0086 |
+| robustness_demo | 4,180 | 849 | 0.0101 |
 
-Prices 2026-10-06, https://platform.claude.com/docs/en/about-claude/pricing
+Prices 2026-11-05, https://platform.claude.com/docs/en/about-claude/pricing
 
 ## Robustness demo (periods, separate from the required output)
 

@@ -87,7 +87,7 @@
   "cost_usd": 0.08508,
   "prices": {
     "source": "https://platform.claude.com/docs/en/about-claude/pricing",
-    "as_of": "2026-10-06"
+    "as_of": "2026-11-05"
   },
   "latency_s": 16.53
 }

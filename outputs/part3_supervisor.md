@@ -11,7 +11,7 @@ Model: `global.anthropic.claude-sonnet-5-5`
 | What is the total of FY2024 fund Top-ups and which is largest? | 7 | 12,943 | 1,479 | 0.0407 | 14.44 |
 | Does the FY2024 GST revenue increase cover the GST Voucher Fund Top-up? | 11 | 32,794 | 3,276 | 0.0983 | 30.35 |
 
-Prices 2026-10-06, https://platform.claude.com/docs/en/about-claude/pricing
+Prices 2026-11-05, https://platform.claude.com/docs/en/about-claude/pricing
 
 ## Query 1: What are the key government revenue streams, and how will the Budget for the Future Energy Fund be supported?
 

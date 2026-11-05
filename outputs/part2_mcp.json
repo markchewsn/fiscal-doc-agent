@@ -109,12 +109,12 @@
   },
   "cost_usd": {
     "extract": 0.065968,
-    "agent": 0.0088363,
-    "robustness_demo": 0.0104523
+    "agent": 0.0086479,
+    "robustness_demo": 0.0100834
   },
   "prices": {
     "source": "https://platform.claude.com/docs/en/about-claude/pricing",
-    "as_of": "2026-10-06"
+    "as_of": "2026-11-05"
   },
   "latency_s": 7.92
 }

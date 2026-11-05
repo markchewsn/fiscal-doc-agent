@@ -27,4 +27,4 @@ Model: `global.anthropic.claude-sonnet-5-5`. Both graphs use the same two agents
 
 Caveat: one run per graph. Agent turn counts vary between runs, so differences of a call or two per query are noise, but the supervisor's extra calls happen on every query.
 
-Prices 2026-10-06, https://platform.claude.com/docs/en/about-claude/pricing
+Prices 2026-11-05, https://platform.claude.com/docs/en/about-claude/pricing
