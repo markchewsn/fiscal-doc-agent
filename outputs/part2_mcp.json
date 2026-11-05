@@ -1,0 +1,120 @@
+{
+  "arm": "mcp",
+  "model": "global.anthropic.claude-sonnet-5-5",
+  "reference_date": "2024-01-01",
+  "records": [
+    {
+      "original_text": "Distributed on Budget Day: 16 February 2024",
+      "normalized_date": "2024-02-16",
+      "status": "Upcoming",
+      "reasoning": "Single date, not part of a period. 2024-02-16 is after the reference date 2024-01-01, so it is Upcoming."
+    },
+    {
+      "original_text": "15 February 2008",
+      "normalized_date": "2008-02-15",
+      "status": "Expired",
+      "reasoning": "Single cut-off date, not part of a period. 2008-02-15 is before 2024-01-01, so it is Expired. The rule it marks (Estate Duty does not apply to a person who dies after this date) is still in force on 2024-01-01."
+    }
+  ],
+  "mentions": {
+    "distribution_date": {
+      "text": "Distributed on Budget Day: 16 February 2024",
+      "evidence": {
+        "page": 1,
+        "quote": "Distributed on Budget Day: 16 February 2024"
+      }
+    },
+    "estate_duty_date": {
+      "text": "15 February 2008",
+      "evidence": {
+        "page": 36,
+        "quote": "Estate Duty does not apply to a person who dies after 15 February 2008."
+      }
+    }
+  },
+  "robustness_demo": [
+    {
+      "original_text": "Financial Year 2022: 1 April 2022 to 31 March 2023",
+      "normalized_date": "2022-04-01",
+      "status": "Expired",
+      "reasoning": "Start of FY2022 period; the period ended 2023-03-31, so it is not active on 2024-01-01 and the date is before the reference date."
+    },
+    {
+      "original_text": "Financial Year 2022: 1 April 2022 to 31 March 2023",
+      "normalized_date": "2023-03-31",
+      "status": "Expired",
+      "reasoning": "End of FY2022 period; the period is not active on 2024-01-01 and the date is before the reference date."
+    },
+    {
+      "original_text": "Financial Year 2023: 1 April 2023 to 31 March 2024",
+      "normalized_date": "2023-04-01",
+      "status": "Ongoing",
+      "reasoning": "Start of FY2023 period, which started on or before 2024-01-01 and ends 2024-03-31, so it is active on the reference date."
+    },
+    {
+      "original_text": "Financial Year 2023: 1 April 2023 to 31 March 2024",
+      "normalized_date": "2024-03-31",
+      "status": "Ongoing",
+      "reasoning": "End of FY2023 period, which is active on 2024-01-01 (starts 2023-04-01, ends after the reference date)."
+    },
+    {
+      "original_text": "Financial Year 2024: 1 April 2024 to 31 March 2025",
+      "normalized_date": "2024-04-01",
+      "status": "Upcoming",
+      "reasoning": "Start of FY2024 period; the period has not started by 2024-01-01 so it is not active, and the date is after the reference date."
+    },
+    {
+      "original_text": "Financial Year 2024: 1 April 2024 to 31 March 2025",
+      "normalized_date": "2025-03-31",
+      "status": "Upcoming",
+      "reasoning": "End of FY2024 period; the period is not active on 2024-01-01 and the date is after the reference date."
+    }
+  ],
+  "usage": {
+    "extract": {
+      "global.anthropic.claude-sonnet-5-5": {
+        "input_tokens": 32314,
+        "output_tokens": 134,
+        "total_tokens": 32448,
+        "input_token_details": {
+          "cache_creation": 0,
+          "cache_read": 0
+        }
+      }
+    },
+    "agent": {
+      "global.anthropic.claude-sonnet-5-5": {
+        "total_tokens": 4228,
+        "output_tokens": 347,
+        "input_tokens": 3881,
+        "input_token_details": {
+          "cache_creation": 0,
+          "ephemeral_5m_input_tokens": 1991,
+          "cache_read": 1884
+        }
+      }
+    },
+    "robustness_demo": {
+      "global.anthropic.claude-sonnet-5-5": {
+        "total_tokens": 5029,
+        "output_tokens": 849,
+        "input_tokens": 4180,
+        "input_token_details": {
+          "cache_creation": 0,
+          "ephemeral_5m_input_tokens": 485,
+          "cache_read": 3689
+        }
+      }
+    }
+  },
+  "cost_usd": {
+    "extract": 0.065968,
+    "agent": 0.0078408,
+    "robustness_demo": 0.0102098
+  },
+  "prices": {
+    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+    "as_of": "2026-10-06"
+  },
+  "latency_s": 7.92
+}

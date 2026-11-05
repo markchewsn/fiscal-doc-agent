@@ -83,3 +83,21 @@ def extract[T: BaseModel](pages: list[dict], schema: type[T], model) -> T:
     """One LLM call over the whole document, returning a validated `schema` instance."""
     structured = model.with_structured_output(schema, method="json_schema")
     return structured.invoke([("system", SYSTEM_PROMPT), ("human", render(pages))])
+
+
+class DateMention(BaseModel):
+    text: str = Field(description="The date phrase copied verbatim from the page.")
+    evidence: Evidence
+
+
+class DateMentions(BaseModel):
+    """The two Part 2 date mentions of the Source Document."""
+
+    distribution_date: DateMention = Field(
+        description="The date the document was distributed, as the full phrase stating it "
+        "(e.g. 'Distributed on ...: <date>')."
+    )
+    estate_duty_date: DateMention = Field(
+        description="The date after which Estate Duty no longer applies, as the date alone "
+        "(e.g. '1 January 2000')."
+    )
