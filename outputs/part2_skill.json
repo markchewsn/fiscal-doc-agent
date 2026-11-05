@@ -1,0 +1,120 @@
+{
+  "arm": "skill",
+  "model": "global.anthropic.claude-sonnet-5-5",
+  "reference_date": "2024-01-01",
+  "records": [
+    {
+      "original_text": "Distributed on Budget Day: 16 February 2024",
+      "normalized_date": "2024-02-16",
+      "status": "Upcoming",
+      "reasoning": "Single distribution date, not a period; 2024-02-16 is after the reference date 2024-01-01, so Upcoming."
+    },
+    {
+      "original_text": "15 February 2008",
+      "normalized_date": "2008-02-15",
+      "status": "Expired",
+      "reasoning": "Single cut-off date, not a period; 2008-02-15 is before 2024-01-01, so Expired. The rule (Estate Duty does not apply to a person who dies after this date) is still in force on 2024-01-01."
+    }
+  ],
+  "mentions": {
+    "distribution_date": {
+      "text": "Distributed on Budget Day: 16 February 2024",
+      "evidence": {
+        "page": 1,
+        "quote": "Distributed on Budget Day: 16 February 2024"
+      }
+    },
+    "estate_duty_date": {
+      "text": "15 February 2008",
+      "evidence": {
+        "page": 36,
+        "quote": "Estate Duty does not apply to a person who dies after 15 February 2008."
+      }
+    }
+  },
+  "robustness_demo": [
+    {
+      "original_text": "Financial Year 2022: 1 April 2022 to 31 March 2023",
+      "normalized_date": "2022-04-01",
+      "status": "Expired",
+      "reasoning": "Start of period 2022-04-01 to 2023-03-31; period ended before 2024-01-01, so not active. Date is before reference date."
+    },
+    {
+      "original_text": "Financial Year 2022: 1 April 2022 to 31 March 2023",
+      "normalized_date": "2023-03-31",
+      "status": "Expired",
+      "reasoning": "End of period 2022-04-01 to 2023-03-31; period ended before 2024-01-01, so not active."
+    },
+    {
+      "original_text": "Financial Year 2023: 1 April 2023 to 31 March 2024",
+      "normalized_date": "2023-04-01",
+      "status": "Ongoing",
+      "reasoning": "Start of period 2023-04-01 to 2024-03-31, which is active on 2024-01-01 (starts before, ends after)."
+    },
+    {
+      "original_text": "Financial Year 2023: 1 April 2023 to 31 March 2024",
+      "normalized_date": "2024-03-31",
+      "status": "Ongoing",
+      "reasoning": "End of period 2023-04-01 to 2024-03-31, which is active on 2024-01-01."
+    },
+    {
+      "original_text": "Financial Year 2024: 1 April 2024 to 31 March 2025",
+      "normalized_date": "2024-04-01",
+      "status": "Upcoming",
+      "reasoning": "Period 2024-04-01 to 2025-03-31 starts after 2024-01-01, so not active; date is after reference date."
+    },
+    {
+      "original_text": "Financial Year 2024: 1 April 2024 to 31 March 2025",
+      "normalized_date": "2025-03-31",
+      "status": "Upcoming",
+      "reasoning": "End of period starting after 2024-01-01; period not active and date is after reference date."
+    }
+  ],
+  "usage": {
+    "extract": {
+      "global.anthropic.claude-sonnet-5-5": {
+        "input_tokens": 32314,
+        "output_tokens": 134,
+        "total_tokens": 32448,
+        "input_token_details": {
+          "cache_creation": 0,
+          "cache_read": 0
+        }
+      }
+    },
+    "agent": {
+      "global.anthropic.claude-sonnet-5-5": {
+        "total_tokens": 9032,
+        "output_tokens": 423,
+        "input_tokens": 8609,
+        "input_token_details": {
+          "cache_read": 3016,
+          "cache_creation": 0,
+          "ephemeral_5m_input_tokens": 5585
+        }
+      }
+    },
+    "robustness_demo": {
+      "global.anthropic.claude-sonnet-5-5": {
+        "total_tokens": 9882,
+        "output_tokens": 868,
+        "input_tokens": 9014,
+        "input_token_details": {
+          "cache_read": 7845,
+          "cache_creation": 0,
+          "ephemeral_5m_input_tokens": 1161
+        }
+      }
+    }
+  },
+  "cost_usd": {
+    "extract": 0.065968,
+    "agent": 0.0188117,
+    "robustness_demo": 0.0131675
+  },
+  "prices": {
+    "source": "https://platform.claude.com/docs/en/about-claude/pricing",
+    "as_of": "2026-10-06"
+  },
+  "latency_s": 8.56
+}

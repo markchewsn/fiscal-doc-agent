@@ -109,8 +109,8 @@
   },
   "cost_usd": {
     "extract": 0.065968,
-    "agent": 0.0078408,
-    "robustness_demo": 0.0102098
+    "agent": 0.0088363,
+    "robustness_demo": 0.0104523
   },
   "prices": {
     "source": "https://platform.claude.com/docs/en/about-claude/pricing",

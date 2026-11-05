@@ -1,5 +1,6 @@
 """Part 2: extract two dates; an agent normalises them via a tool and classifies vs 2024-01-01."""
 
+import importlib.util
 import json
 import sys
 from functools import cache
@@ -13,6 +14,8 @@ from deepagents import (
     register_harness_profile,
 )
 from deepagents._models import get_model_provider
+from deepagents.backends import FilesystemBackend
+from deepagents.middleware import SkillsMiddleware
 from langchain_core.callbacks import get_usage_metadata_callback
 from langchain.agents.middleware import before_model
 from langchain.tools import ToolRuntime, tool
@@ -22,9 +25,11 @@ from langchain_mcp_adapters.client import MultiServerMCPClient
 from pydantic import BaseModel, Field
 
 from fiscal_doc_agent.extraction import DateMentions, extract
-from fiscal_doc_agent.parsing import load_pages
+from fiscal_doc_agent.parsing import ROOT, load_pages
 
 REFERENCE_DATE = "2024-01-01"
+SKILLS_DIR = ROOT / "skills"
+Arm = Literal["mcp", "skill"]
 
 RULES = f"""Classify each date against the reference date {REFERENCE_DATE}:
 - Ongoing: the date is the start or end of a period stated in its item (e.g. 'X to Y'), and
@@ -122,18 +127,39 @@ def disable_general_purpose_subagent(provider: str | None) -> None:
     )
 
 
-def build_agent(model, tools):
-    """deepagents harness trimmed to ls/read_file, with no general-purpose subagent."""
+@cache
+def skill_tool():
+    """normalize_dates from the skill's own folder (skills/normalize-dates/scripts/)."""
+    path = SKILLS_DIR / "normalize-dates" / "scripts" / "normalize_dates.py"
+    spec = importlib.util.spec_from_file_location("normalize_dates_skill", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return tool(module.normalize_dates)
+
+
+async def build_agent(arm: Arm, model, submit):
+    """deepagents harness trimmed to ls/read_file, with no general-purpose subagent. The arms
+    differ only in how normalize_dates is delivered: an MCP tool bound from turn one, or a
+    skill (the MCP arm's filesystem is the empty default, the skill arm's holds the skills)."""
+    if arm == "mcp":
+        tools, backend, extra = [*await mcp_tools()], None, []
+    else:
+        # skills/ served read-only at '/'; normalize_dates is bound only once the agent has read
+        # a SKILL.md listing it in metadata.include_tools. create_deep_agent's plain `skills=`
+        # can't supply tools, hence the explicit SkillsMiddleware.
+        tools, backend = [], FilesystemBackend(root_dir=SKILLS_DIR, virtual_mode=True)
+        extra = [SkillsMiddleware(backend=backend, sources=["/"], tools=[skill_tool()])]
     disable_general_purpose_subagent(get_model_provider(model))
     return create_deep_agent(
-        model, tools, system_prompt=AGENT_PROMPT,
-        middleware=[FilesystemMiddleware(tools=["ls", "read_file"]), stop_after_submit],
+        model, [*tools, submit], system_prompt=AGENT_PROMPT,
+        middleware=[FilesystemMiddleware(backend=backend, tools=["ls", "read_file"]),
+                    stop_after_submit, *extra],
     )
 
 
-async def run_part2(arm: Literal["mcp"], model) -> dict:
+async def run_part2(arm: Arm, model) -> dict:
     """Return {records, mentions, usage: {stage: usage_by_model}}; usage stages extract, agent."""
-    if arm != "mcp":
+    if arm not in ("mcp", "skill"):  # before the paid extraction call
         raise ValueError(f"unknown arm {arm!r}")
     usage = {}
 
@@ -142,13 +168,14 @@ async def run_part2(arm: Literal["mcp"], model) -> dict:
     usage["extract"] = cb.usage_metadata
     items = [{"original_text": m.text, "context": m.evidence.quote}
              for m in (mentions.distribution_date, mentions.estate_duty_date)]
-    records, usage["agent"] = await classify_dates(items, model)
+    records, usage["agent"] = await classify_dates(items, model, arm)
     return {"records": records, "mentions": mentions.model_dump(), "usage": usage}
 
 
-async def classify_dates(items: list[dict], model) -> tuple[list[dict], dict]:
-    """Agent normalises (via MCP) and classifies [{original_text, context}] -> (records, usage)."""
-    agent = build_agent(model, [*await mcp_tools(), submit_tool([i["original_text"] for i in items])])
+async def classify_dates(items: list[dict], model, arm: Arm) -> tuple[list[dict], dict]:
+    """Agent normalises (via `arm`'s normalize_dates) and classifies [{original_text, context}]
+    -> (records, usage)."""
+    agent = await build_agent(arm, model, submit_tool([i["original_text"] for i in items]))
     with get_usage_metadata_callback() as cb:
         state = await agent.ainvoke({"messages": [("human", json.dumps(items, indent=2))]})
     return submitted_records(state["messages"]), cb.usage_metadata

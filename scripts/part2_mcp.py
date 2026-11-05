@@ -1,5 +1,5 @@
 """Part 2 (MCP arm): extract two dates; an agent normalises them via a stdio MCP tool and
-classifies them vs 2024-01-01.
+classifies them vs 2024-01-01. scripts/part2_skill.py reuses main() for the Skill arm.
 
 Usage: python scripts/part2_mcp.py [--yes] [--out outputs/part2_mcp.json]
 Model is chosen by LLM_MODEL (default Bedrock Sonnet 5.5); see .env.example.
@@ -55,30 +55,37 @@ def to_markdown(result: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-async def main():
+# Agent turns per run before classify-and-submit: the skill arm first reads SKILL.md.
+NORMALIZE_TURNS = {"mcp": ["normalize_dates via MCP"],
+                   "skill": ["read SKILL.md", "normalize_dates via the skill"]}
+
+
+async def main(arm="mcp"):
+    """Run Part 2 for `arm`, write outputs/part2_<arm>.json + .md; return the result or None."""
     ap = argparse.ArgumentParser()
     ap.add_argument("--yes", action="store_true", help="skip the confirmation prompt")
-    ap.add_argument("--out", type=Path, default=ROOT / "outputs" / "part2_mcp.json")
+    ap.add_argument("--out", type=Path, default=ROOT / "outputs" / f"part2_{arm}.json")
     args = ap.parse_args()
 
     model = get_model()
     model_id = getattr(model, "model_id", None) or getattr(model, "model", str(model))
-    print(f"Plan: ~5 LLM calls to {model_id}: 1 date extraction (whole document), then ~2 "
-          "agent turns (normalize_dates via MCP, then classify and submit_dates) for the "
-          "document dates and ~2 more for the robustness-demo periods; +1 per rejected "
-          "submit_dates the agent retries.")
+    turns = len(NORMALIZE_TURNS[arm]) + 1
+    print(f"Plan: ~{1 + 2 * turns} LLM calls to {model_id}: 1 date extraction (whole "
+          f"document), then ~{turns} agent turns ({", ".join(NORMALIZE_TURNS[arm])}, then classify and "
+          f"submit_dates) for the document dates and ~{turns} more for the robustness-demo "
+          "periods; +1 per rejected submit_dates the agent retries.")
     if not args.yes and input("Proceed? [y/N] ").strip().lower() != "y":
-        return
+        return None
 
     start = time.perf_counter()
-    result = await run_part2("mcp", model)
+    result = await run_part2(arm, model)
     latency = time.perf_counter() - start
-    demo, demo_usage = await classify_dates(PERIODS, model)
+    demo, demo_usage = await classify_dates(PERIODS, model, arm)
     usage = {**result["usage"], "robustness_demo": demo_usage}
     costs = {stage: cost_usd(u) for stage, u in usage.items()}
 
     out = {
-        "arm": "mcp",
+        "arm": arm,
         "model": model_id,
         "reference_date": REFERENCE_DATE,
         "records": result["records"],
@@ -94,6 +101,7 @@ async def main():
     args.out.with_suffix(".md").write_text(to_markdown(out))
     print(json.dumps({"records": out["records"], "robustness_demo": demo}, indent=2))
     print(f"Cost: {costs}\nWrote {args.out} and .md")
+    return out
 
 
 if __name__ == "__main__":

@@ -9,7 +9,7 @@ from langchain_core.runnables import RunnableLambda
 
 from fiscal_doc_agent.dates import normalize_dates
 from fiscal_doc_agent.parsing import ROOT
-from fiscal_doc_agent.part2 import classify_dates, run_part2
+from fiscal_doc_agent.part2 import classify_dates, mcp_tools, run_part2, skill_tool
 
 
 @pytest.mark.parametrize(
@@ -127,7 +127,7 @@ def test_period_gives_one_record_per_date_and_dates_must_match_tool_output():
         submit(4, "2023-04-01", "2024-03-31"),
     )
 
-    records, _ = asyncio.run(classify_dates([{"original_text": fy, "context": ""}], model))
+    records, _ = asyncio.run(classify_dates([{"original_text": fy, "context": ""}], model, "mcp"))
 
     assert records == [record("2023-04-01"), record("2024-03-31")]
     assert model.turns == []  # both bad submits were rejected, the good one ended the run
@@ -153,3 +153,49 @@ def test_committed_part2_mcp_output():
                     "2023-04-01": "Ongoing", "2024-03-31": "Ongoing",  # FY2023, active
                     "2024-04-01": "Upcoming", "2025-03-31": "Upcoming"}  # FY2024
     assert out["usage"]["agent"] and out["cost_usd"]["agent"] > 0
+
+
+def test_skill_tool_matches_mcp_tool_so_only_delivery_differs():
+    (mcp,) = asyncio.run(mcp_tools())
+    skill = skill_tool()
+    assert (skill.name, skill.description, skill.args) == (mcp.name, mcp.description, mcp.args)
+    assert json.loads(skill.invoke({"texts": [DIST, "none"]})) == [["2024-02-16"], []]
+
+
+READ_SKILL = AIMessage("", tool_calls=[
+    _call("read_file", 0, file_path="/normalize-dates/SKILL.md", limit=1000)])
+
+
+def test_skill_arm_sees_normalize_dates_only_after_reading_skill():
+    model = _fake_model(READ_SKILL, NORMALIZE, SUBMIT)
+
+    result = asyncio.run(run_part2("skill", model))
+
+    before, after = model.tools_per_turn[:2]
+    assert sorted(before) == ["ls", "read_file", "submit_dates"]
+    assert sorted(after) == ["ls", "normalize_dates", "read_file", "submit_dates"]
+    assert result["records"] == RECORDS  # same contract as the MCP arm on the same script
+    assert model.turns == []
+
+
+def test_skill_arm_cannot_call_normalize_dates_before_reading_skill():
+    too_early = AIMessage("", tool_calls=[_call("normalize_dates", 9, texts=[DIST, ESTATE])])
+    model = _fake_model(too_early, READ_SKILL, NORMALIZE, SUBMIT)
+
+    result = asyncio.run(run_part2("skill", model))
+
+    assert result["records"] == RECORDS  # first call failed as unknown tool, agent recovered
+    assert "normalize_dates" not in model.tools_per_turn[0]
+
+
+def test_committed_skill_arm_output_agrees_with_mcp_arm():
+    load = lambda arm: json.loads((ROOT / "outputs" / f"part2_{arm}.json").read_text())
+    mcp, skill = load("mcp"), load("skill")
+    statuses = lambda out: {r["normalized_date"]: r["status"]
+                            for r in out["records"] + out["robustness_demo"]}
+    assert skill["arm"] == "skill"
+    assert statuses(skill) == statuses(mcp)
+    for r in skill["records"]:
+        assert set(r) == {"original_text", "normalized_date", "status", "reasoning"}
+    assert skill["cost_usd"]["agent"] > 0
+    assert "agree across arms: **yes**" in (ROOT / "outputs" / "part2_comparison.md").read_text()

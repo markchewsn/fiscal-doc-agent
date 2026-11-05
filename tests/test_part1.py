@@ -102,3 +102,18 @@ def test_committed_part1_output():
         for ev in field["evidence"]:
             assert ev["quote"].strip() and norm(ev["quote"]) in page_text[ev["page"]], (name, ev)
     assert out["usage"] and out["cost_usd"] > 0
+
+
+def test_cost_counts_bedrock_cache_writes_reported_by_ttl():
+    # langchain-aws reports Bedrock cache writes per TTL and leaves cache_creation at 0
+    usage = {
+        "global.anthropic.claude-sonnet-5-5": {
+            "input_tokens": 1_600_000,
+            "output_tokens": 0,
+            "input_token_details": {"cache_read": 400_000, "cache_creation": 0,
+                                    "ephemeral_5m_input_tokens": 100_000,
+                                    "ephemeral_1h_input_tokens": 100_000},
+        }
+    }
+    # 1M uncached * $2 + 0.4M read * $0.20 + 0.1M 5m write * $2.50 + 0.1M 1h write * $4 (2x input)
+    assert round(cost_usd(usage), 6) == 2.0 + 0.08 + 0.25 + 0.4
