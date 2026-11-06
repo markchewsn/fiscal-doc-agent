@@ -71,7 +71,7 @@ def score(golden: dict, outputs: dict[str, dict]) -> dict[str, dict[str, bool]]:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--label", default="", help="what changed since the last Eval Run")
+    ap.add_argument("--label", default="", help="what changed since the last Eval Run; saves the scores to evals/history.jsonl")
     ap.add_argument("-v", action="store_true", help="list failed checks")
     args = ap.parse_args()
 
@@ -87,8 +87,9 @@ def main():
         for name, ok in checks.items():
             if args.v and not ok:
                 print(f"    FAIL {name}")
-    with (EVALS / "history.jsonl").open("a") as history:
-        history.write(json.dumps(run) + "\n")
+    if args.label:
+        with (EVALS / "history.jsonl").open("a") as history:
+            history.write(json.dumps(run) + "\n")
 
 
 if __name__ == "__main__":

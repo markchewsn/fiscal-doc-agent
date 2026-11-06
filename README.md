@@ -69,11 +69,11 @@ output.
 
 ## Evaluation
 
-`uv run python scripts/evaluate.py --label "what changed"` compares the saved results in
+`uv run python scripts/evaluate.py` compares the saved results in
 `outputs/` with expected answers checked by hand against the Source Document (the Golden
 Answers, in `evals/golden.json`). It makes no LLM calls. To check a change (prompt, model, tool
-or graph), rerun that part's scripts, then this one, and compare the new line in
-`evals/history.jsonl` with earlier ones. `-v` lists the checks that failed.
+or graph), rerun that part's scripts, then this one with `--label "what changed"`, and compare
+the new line in `evals/history.jsonl` with earlier ones. `-v` lists the checks that failed.
 
 Only what the assignment asks for is scored:
 
@@ -307,8 +307,9 @@ specialisms that can pass work to each other, where lower cost and latency matte
   FY2024 column.
 - **Money in $billion.** Top-ups are printed in $million; converted to $billion so every money
   field shares one unit.
-- **Tax list.** Taxes named in the section text plus the named parts of Other Taxes (Foreign
-  Worker Levy, etc.); non-tax revenue such as Vehicle Quota Premiums is left out.
+- **Tax list.** Follows the Operating Revenue section the assignment points to (pages 5-6):
+  taxes named in its text, including Other Taxes and its named parts (Foreign Worker Levy,
+  etc.); non-tax revenue such as Vehicle Quota Premiums is left out.
 - **Cut-off dates.** "Estate Duty does not apply to a person who dies after 15 February 2008"
   marks a rule still in force. Classified by the date itself (Expired), with the reasoning
   noting the rule still applies; Ongoing is kept for periods, as the assignment defines it.
