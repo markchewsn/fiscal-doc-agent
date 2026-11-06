@@ -21,7 +21,7 @@ Needs Python 3.12 and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync          # install from uv.lock
-uv run pytest    # 32 offline tests, no API key needed
+uv run pytest    # 34 offline tests, no API key needed
 ```
 
 The tests check the committed outputs against known answers, run each pipeline with a scripted
@@ -67,6 +67,48 @@ question). Outputs go to `outputs/` as JSON plus a readable Markdown file.
 Run each part's scripts in the order shown; the second one compares against the first one's
 output.
 
+## Evaluation
+
+`uv run python scripts/evaluate.py --label "what changed"` compares the saved results in
+`outputs/` with expected answers checked by hand against the Source Document (the Golden
+Answers, in `evals/golden.json`). It makes no LLM calls. To check a change (prompt, model, tool
+or graph), rerun that part's scripts, then this one, and compare the new line in
+`evals/history.jsonl` with earlier ones. `-v` lists the checks that failed.
+
+Only what the assignment asks for is scored:
+
+- **Part 1:** the five fields (numbers must match exactly), the cited page for the four number
+  fields, and the tax list (taxes that must and must not appear).
+- **Part 2:** the status of the two document dates, for both the MCP and the Skill version. A
+  date that is not in the document counts as a failed check.
+- **Part 3:** the assignment's query, for both the Supervisor and the Swarm graph: the answer
+  must mention the facts listed in `evals/golden.json`. The extra example dates and queries
+  are not scored.
+
+Baseline on the committed outputs:
+
+| Suite | Checks passed |
+|---|---|
+| part1 | 20/20 |
+| part2_mcp | 2/2 |
+| part2_skill | 2/2 |
+| part3_supervisor | 5/5 |
+| part3_swarm | 5/5 |
+
+This is a simple evaluation: exact values for Part 1 and Part 2, and a list of facts the Part 3
+answer must mention. It checks that each fact appears, not whether the answer is complete or
+well argued, and a correct answer worded differently (for example "$5,000 million" instead of
+"$5 billion") would fail. More thorough options include:
+
+- **Semantic similarity:** compare the answer with a reference answer by meaning (embeddings),
+  so different wording of the same fact still passes.
+- **LLM as a judge:** a second model grades each answer against the Source Document or a
+  reference answer, using a rubric (correct figures, all parts of the question covered, no
+  unsupported claims). This costs LLM calls, and the judge's grades would need spot checks
+  of their own.
+- **More test questions:** more queries with checked answers, scored over several
+  runs, since LLM output varies between runs.
+
 ## Design
 
 ```
@@ -79,7 +121,8 @@ src/fiscal_doc_agent/
   part2.py        run_part2(arm, model): extract, normalise and classify dates
   part3.py        document tools, the two agents, the Supervisor and Swarm graphs
 skills/normalize-dates/   the Agent Skill version of normalize_dates
-scripts/                  one script per part
+scripts/                  one script per part, plus evaluate.py
+evals/                    Golden Answers and the history of Eval Runs
 ```
 
 ### Part 1: parsing and extraction
